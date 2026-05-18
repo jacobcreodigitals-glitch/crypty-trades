@@ -15,13 +15,11 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    setSuccessMessage(null);
     setLoading(true);
 
     const response = isSignUp
@@ -32,14 +30,6 @@ export default function LoginPage() {
 
     if (response.error) {
       setError(response.error.message);
-      return;
-    }
-
-    if (isSignUp) {
-      setSuccessMessage('Check your email for a confirmation link before logging in.');
-      setIsSignUp(false);
-      setEmail('');
-      setPassword('');
       return;
     }
 
@@ -65,21 +55,13 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <form className="space-y-5" onSubmit={handleSubmit}>
-              {successMessage ? (
-                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
-                  {successMessage}
-                </div>
-              ) : null}
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(event) => {
-                    setEmail(event.target.value);
-                    if (successMessage) setSuccessMessage(null);
-                  }}
+                  onChange={(event) => setEmail(event.target.value)}
                   required
                   placeholder="you@example.com"
                 />
@@ -90,10 +72,7 @@ export default function LoginPage() {
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(event) => {
-                    setPassword(event.target.value);
-                    if (successMessage) setSuccessMessage(null);
-                  }}
+                  onChange={(event) => setPassword(event.target.value)}
                   required
                   placeholder="********"
                 />

@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dateFilter, setDateFilter] = useState<string>('');
 
   useEffect(() => {
     const fetchTrades = async () => {
@@ -49,6 +50,14 @@ export default function DashboardPage() {
   const closedTrades = useMemo(
     () => trades.filter((trade) => trade.status === 'closed' && trade.sell_price !== null),
     [trades]
+  );
+
+  const filteredTrades = useMemo(
+    () => {
+      if (!dateFilter) return trades;
+      return trades.filter((trade) => trade.created_at.startsWith(dateFilter));
+    },
+    [trades, dateFilter]
   );
 
   const totalProfitLoss = useMemo(
@@ -137,6 +146,23 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-slate-300">Filter by date added</p>
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(event) => setDateFilter(event.target.value)}
+            className="rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400"
+          />
+        </div>
+        {dateFilter ? (
+          <Button variant="outline" onClick={() => setDateFilter('')}>
+            Clear date filter
+          </Button>
+        ) : null}
+      </div>
+
       <section className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-card">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-white/10 text-left text-sm">
@@ -150,23 +176,24 @@ export default function DashboardPage() {
                 <th className="px-6 py-4 font-medium">P&L USD</th>
                 <th className="px-6 py-4 font-medium">P&L %</th>
                 <th className="px-6 py-4 font-medium">Actions</th>
+                <th className="px-6 py-4 font-medium">Date added</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10 bg-background">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400">
+                  <td colSpan={9} className="px-6 py-8 text-center text-slate-400">
                     Loading trades...
                   </td>
                 </tr>
-              ) : trades.length === 0 ? (
+              ) : filteredTrades.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400">
+                  <td colSpan={9} className="px-6 py-8 text-center text-slate-400">
                     No trades yet. Add your first position.
                   </td>
                 </tr>
               ) : (
-                trades.map((trade) => {
+                filteredTrades.map((trade) => {
                   const profitLoss = trade.sell_price !== null ? (trade.sell_price - trade.buy_price) * trade.quantity : 0;
                   const profitPercent = trade.sell_price !== null ? ((trade.sell_price - trade.buy_price) / trade.buy_price) * 100 : 0;
                   const isPositive = profitLoss >= 0;
@@ -197,6 +224,13 @@ export default function DashboardPage() {
                         <Button variant="outline" onClick={() => deleteTrade(trade.id)}>
                           Delete
                         </Button>
+                      </td>
+                      <td className="px-6 py-4 text-slate-200 font-mono">
+                        {new Date(trade.created_at).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
                       </td>
                     </tr>
                   );
